@@ -189,66 +189,77 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
 
+                // 1. Intentar inicio de sesión inicial (con token o anónimo)
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                        console.error("Custom token sign-in failed, proceeding to anonymous sign-in.", e);
+                        // Si el token falla, intentar anónimo
+                        return signInAnonymously(auth);
+                    });
+                } else {
+                    // Si no hay token personalizado, iniciar sesión anónimamente
+                    await signInAnonymously(auth);
+                }
+                
+                // 2. Esperar a que el estado de autenticación esté completamente resuelto
                 await new Promise((resolve) => {
-                    // Esperar a que Firebase Auth esté listo
-                    onAuthStateChanged(auth, async (user) => {
+                    const unsubscribe = onAuthStateChanged(auth, (user) => {
                         if (user) {
                             userId = user.uid;
+                            console.log("Authentication successful. User ID:", userId);
                         } else {
-                            // Si no hay usuario (p.ej., token expirado o no proporcionado), intentar iniciar sesión anónimamente
-                            try {
-                                if (initialAuthToken) {
-                                    await signInWithCustomToken(auth, initialAuthToken);
-                                    userId = auth.currentUser.uid;
-                                } else {
-                                    const anonymousUser = await signInAnonymously(auth);
-                                    userId = anonymousUser.user.uid;
-                                }
-                            } catch (error) {
-                                console.error("Error signing in:", error);
-                                // Fallback a un ID de usuario anónimo local si falla la autenticación
-                                userId = crypto.randomUUID();
-                            }
+                            // En caso de fallo total, usar un ID anónimo local
+                            userId = crypto.randomUUID();
+                            console.log("Authentication failed or logged out. Using fallback ID:", userId);
                         }
                         isAuthReady = true;
-                        // Mostramos el ID de usuario para que sepa quién está usando la app
                         document.getElementById('user-display').textContent = `Usuario: ${userId}`;
+                        unsubscribe(); // Dejar de escuchar una vez resuelto
                         resolve();
                     });
                 });
-
-                // Si es la primera vez que se carga, intentar inicializar con los datos de ejemplo
+                
+                // 3. Proceder con las operaciones de la base de datos SÓLO después de que la autenticación esté lista
                 await initializeDataIfEmpty();
-                // Una vez autenticado, iniciar el listener de datos
                 startDataListener();
 
                 // Inicializar event listeners del formulario
                 setupFormListeners();
 
             } catch (error) {
-                console.error("Error initializing Firebase:", error);
+                console.error("Error initializing Firebase or during sign-in:", error);
+                // Mostrar un error de autenticación
+                document.getElementById('user-display').textContent = `Error de Auth: ${error.code || 'Desconocido'}`;
             }
         };
 
         const initializeDataIfEmpty = async () => {
+            if (!isAuthReady || !db) return; // Se asegura de que Auth esté listo
+
             // Se usa la ruta pública
             const dataRef = collection(db, getSponsorshipPath());
-            const q = query(dataRef);
-            const snapshot = await getDocs(q); 
+            
+            try {
+                const q = query(dataRef);
+                const snapshot = await getDocs(q); 
 
-            if (snapshot.empty) {
-                console.log("No data found. Initializing with default sponsorships.");
-                // Usar Promise.all para guardar todas las marcas
-                await Promise.all(initialSponsorships.map(async (item) => {
-                    // Usamos addDoc para que Firebase genere el ID automáticamente
-                    await addDoc(collection(db, getSponsorshipPath()), item);
-                }));
+                if (snapshot.empty) {
+                    console.log("No data found. Initializing with default sponsorships.");
+                    // Usar Promise.all para guardar todas las marcas
+                    await Promise.all(initialSponsorships.map(async (item) => {
+                        // Usamos addDoc para que Firebase genere el ID automáticamente
+                        await addDoc(collection(db, getSponsorshipPath()), item);
+                    }));
+                }
+            } catch (error) {
+                // Capturar errores de permisos aquí para la inicialización
+                console.error("Error during initial data check/creation:", error);
             }
         };
 
         const updateSponsorshipStatus = async (id, newStatus) => {
-            if (!db) {
-                console.error("Database not ready.");
+            if (!db || !isAuthReady) {
+                console.error("Database or Auth not ready.");
                 return;
             }
             try {
@@ -263,9 +274,9 @@
 
         // Función para agregar una nueva marca
         const addSponsorship = async (name, amount, notes) => {
-            if (!db) {
-                console.error("Database not ready.");
-                return;
+            if (!db || !isAuthReady) {
+                console.error("Database or Auth not ready.");
+                return false;
             }
             try {
                 const newSponsorship = {
@@ -422,8 +433,8 @@
         // --- 3. Listener de Firestore ---
 
         const startDataListener = () => {
-            if (!db) {
-                console.error("Cannot start listener, DB not available.");
+            if (!db || !isAuthReady) {
+                console.error("Cannot start listener, DB or Auth not available.");
                 return;
             }
 
@@ -551,5 +562,3 @@
     </script>
 </body>
 </html>
-
-
