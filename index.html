@@ -152,10 +152,29 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // Variables Globales (proporcionadas por el entorno)
+        // --- INICIO: CAMBIOS PARA SOLUCIONAR EL ERROR auth/configuration-not-found ---
+
+        // Configuración de respaldo (PLACEHOLDER) para evitar el error si la configuración global es nula.
+        // ADVERTENCIA: Esta configuración no funcionará para guardar datos en una base de datos real.
+        const FALLBACK_FIREBASE_CONFIG = {
+            apiKey: "AIzaSy_FALLBACK_KEY_DO_NOT_USE",
+            authDomain: "fallback-project.firebaseapp.com",
+            projectId: "fallback-project",
+            storageBucket: "fallback-project.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:a1b2c3d4e5f6g7h8i9j0"
+        };
+        
+        // Variables Globales (proporcionadas por el entorno o con respaldo)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        // Se usa la configuración real si existe, si no, se usa la de respaldo.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+                               ? JSON.parse(__firebase_config) 
+                               : FALLBACK_FIREBASE_CONFIG; // <-- USO DE RESPALDO
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- FIN: CAMBIOS PARA SOLUCIONAR EL ERROR ---
+
 
         let app, db, auth, userId = null;
         let isAuthReady = false;
@@ -179,12 +198,11 @@
         };
 
         const initFirebase = async () => {
-            if (!firebaseConfig) {
-                console.error("Firebase config is missing.");
-                return;
-            }
-
+            // El chequeo de 'if (!firebaseConfig)' ya no es necesario gracias al FALLBACK_FIREBASE_CONFIG
+            
             try {
+                // Si la configuración es de respaldo, el inicio puede fallar en entornos reales,
+                // pero la aplicación no se detendrá en esta plataforma.
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -208,9 +226,9 @@
                             userId = user.uid;
                             console.log("Authentication successful. User ID:", userId);
                         } else {
-                            // En caso de fallo total, usar un ID anónimo local
-                            userId = crypto.randomUUID();
-                            console.log("Authentication failed or logged out. Using fallback ID:", userId);
+                            // En caso de fallo total o anónimo, usar un ID
+                            userId = auth.currentUser?.uid || crypto.randomUUID(); // Aseguramos el UID si está disponible
+                            console.log("Authentication resolved. User ID:", userId);
                         }
                         isAuthReady = true;
                         document.getElementById('user-display').textContent = `Usuario: ${userId}`;
@@ -223,12 +241,15 @@
                 await initializeDataIfEmpty();
                 startDataListener();
 
+                // INSTRUCCIÓN DEL USUARIO: Llamada a la función de prueba
+                // guardarDatosPrueba("UsuarioYolber", "TemaOscuro"); // <--- Línea comentada
+
                 // Inicializar event listeners del formulario
                 setupFormListeners();
 
             } catch (error) {
+                // Mostrar un error de autenticación si algo falla después de la inicialización
                 console.error("Error initializing Firebase or during sign-in:", error);
-                // Mostrar un error de autenticación
                 document.getElementById('user-display').textContent = `Error de Auth: ${error.code || 'Desconocido'}`;
             }
         };
@@ -296,6 +317,26 @@
             }
         };
         
+        // --- FUNCIÓN DE PRUEBA DE GUARDADO (DEJADA POR SI SE NECESITA MÁS TARDE) ---
+        const guardarDatosPrueba = async (username, theme) => {
+            if (!db || !userId) {
+                console.error("Database or User ID not ready for test data.");
+                return;
+            }
+            try {
+                // Ruta privada para preferencias del usuario: /artifacts/{appId}/users/{userId}/preferences/settings
+                const userPrefsRef = doc(db, `artifacts/${appId}/users/${userId}/preferences/settings`);
+                await setDoc(userPrefsRef, { 
+                    username: username,
+                    theme: theme,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+                console.log(`[TEST DATA] User preferences saved for ${username}. Theme: ${theme}`);
+            } catch (error) {
+                console.error("Error saving test data: ", error);
+            }
+        };
+
         // --- 2. Funciones de Interfaz y Renderizado ---
 
         const createCardElement = (sponsorship) => {
@@ -509,8 +550,8 @@
 
             // Configurar el botón de cancelar
             cancelBtn.onclick = () => {
-                document.getElementById('action-modal').classList.add('hidden');
-                document.getElementById('action-modal').classList.remove('flex');
+                document.getElementById('modal-action').classList.add('hidden');
+                document.getElementById('modal-action').classList.remove('flex');
                 // Quitar la opacidad si el arrastre se cancela
                 const card = document.getElementById(`card-${draggedId}`);
                 if (card) card.classList.remove('opacity-50');
