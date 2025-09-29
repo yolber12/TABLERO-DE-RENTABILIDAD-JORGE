@@ -76,7 +76,7 @@
         </div>
     </header>
 
-    <!-- La columna principal flex-row asegura que sea un scroll horizontal en mobile si es necesario -->
+    <!-- La columna principal flex-row overflow-x-auto asegura que sea un scroll horizontal en mobile si es necesario -->
     <main class="flex flex-row overflow-x-auto gap-6 pb-4 md:pb-0 justify-start md:justify-center">
 
         <!-- Columna: 1. Negociación (Fase I: Propuesta y Negociación) -->
@@ -193,10 +193,35 @@
         // Añadida importación de deleteDoc para la función de eliminación
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDocs, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // Variables Globales (proporcionadas por el entorno)
+        // Variables Globales (proporcionadas por el entorno Canvas)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- ATENCIÓN: CONFIGURACIÓN MANUAL DE FIREBASE ---
+        // Al subir a un hosting externo (como GitHub Pages), las variables globales
+        // de Canvas (como __firebase_config) dejan de estar disponibles.
+        // DEBES PEGAR TUS CREDENCIALES REALES AQUÍ para que la app funcione externamente.
+        const MANUAL_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyA1UPMYdUxOPfBpExXsdWJO_AUjaqW4x5U", // 🔑 CREDENCIAL APLICADA
+            authDomain: "tablero-jorge.firebaseapp.com", // 🔑 CREDENCIAL APLICADA
+            projectId: "tablero-jorge", // 🔑 CREDENCIAL APLICADA
+            // Otros campos son opcionales para esta app
+        };
+        // --- FIN DE CONFIGURACIÓN MANUAL DE FIREBASE ---
+
+
+        // Lógica de carga de configuración: prioriza la inyectada, sino usa la manual.
+        let firebaseConfig = null;
+        
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else if (MANUAL_FIREBASE_CONFIG.apiKey !== "PEGA_TU_API_KEY_AQUI") {
+                firebaseConfig = MANUAL_FIREBASE_CONFIG;
+            }
+        } catch (e) {
+            console.error("Error al cargar la configuración de Firebase:", e);
+        }
 
         let app, db, auth, userId = null;
         let isAuthReady = false;
@@ -220,9 +245,9 @@
         };
 
         const initFirebase = async () => {
-            if (!firebaseConfig) {
-                console.error("Firebase config is missing.");
-                document.getElementById('user-display').textContent = 'Error: Configuración de Firebase faltante.';
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
+                console.error("Firebase config is missing or incomplete. Please check the MANUAL_FIREBASE_CONFIG block.");
+                document.getElementById('user-display').textContent = 'Error: Configuración de Firebase Faltante. ❌';
                 return;
             }
 
