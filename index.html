@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Orden y Control - Patrocinios Jorge Dos Santos</title>
+    <title>Dashboard de Patrocinios - Jorge Dos Santos</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Carga de iconos Lucide -->
-    <script type="module">
-        import { createIcons, Car, DollarSign, Clock, CheckCircle, PlusCircle, XCircle } from 'https://cdn.jsdelivr.net/npm/lucide-esm@latest/dist/lucide-esm.js';
-        window.lucideCreateIcons = createIcons; // Hacemos la función disponible globalmente
-        createIcons({ icons: { Car, DollarSign, Clock, CheckCircle, PlusCircle, XCircle } }); // Para iconos estáticos
-    </script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -36,55 +32,55 @@
             transform: scale(1.02);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
         }
-        /* Estilo para simular el arrastre sobre una zona */
         .drag-over {
-            background-color: #e0e7ff; /* Blue-100 */
-            border-color: #3b82f6; /* Blue-500 */
+            background-color: #e0e7ff;
+            border-color: #3b82f6;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
         }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- MODIFICACIÓN: Header con redacción más profesional y visualmente más atractivo -->
+    <!-- Header -->
     <header class="mb-8 p-6 bg-white rounded-2xl shadow-2xl border-t-4 border-indigo-600">
         <div class="flex items-start justify-between">
             <div>
                 <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 flex items-center">
-                    <i data-lucide="Car" class="w-7 h-7 mr-3 text-indigo-700"></i>
-                    Dashboard de Alto Rendimiento: Cartera de Patrocinios
+                    <i data-lucide="car" class="w-7 h-7 mr-3 text-indigo-700"></i>
+                    Dashboard de Patrocinios - Jorge Dos Santos
                 </h1>
-                <p class="text-lg text-gray-600">Optimiza la **Gestión Estratégica de Acuerdos** Clave para Jorge Dos Santos y visualiza el progreso del pipeline.</p>
+                <p class="text-lg text-gray-600">Gestión estratégica de acuerdos y visualización del pipeline de patrocinios.</p>
             </div>
-            <!-- MEJORA: Muestra de Usuario con estado de conexión más explícito -->
             <span id="user-display" class="text-sm bg-indigo-100 px-4 py-2 rounded-full font-semibold ml-4 shadow-inner transition duration-300">Conectando...</span>
         </div>
 
-        <!-- Sección de Métricas Destacadas (Total Amount) - Estilo mejorado con gradiente -->
+        <!-- Métricas Destacadas -->
         <div class="mt-6 p-5 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl shadow-lg flex justify-between items-center transform transition duration-300 hover:scale-[1.01]">
             <p class="text-white font-bold text-xl flex items-center">
-                <i data-lucide="DollarSign" class="w-6 h-6 mr-3 text-white"></i>
-                Capital Proyectado Total (Septiembre): 
+                <i data-lucide="dollar-sign" class="w-6 h-6 mr-3 text-white"></i>
+                Capital Proyectado Total:
             </p>
-            <span id="total-amount" class="text-4xl font-extrabold text-yellow-300 ml-4">\$0.00</span>
+            <span id="total-amount" class="text-4xl font-extrabold text-yellow-300 ml-4">$0.00</span>
         </div>
     </header>
 
     <main class="flex flex-row overflow-x-auto gap-6 justify-center">
 
-        <!-- Columna: 1. Negociación (Fase I: Propuesta y Negociación) -->
+        <!-- Columna: Negociación -->
         <div id="negotiation" class="kanban-column rounded-xl p-4 flex flex-col h-full" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'negotiation')" ondragleave="handleDragLeave(event)">
             <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2 flex items-center">
-                <i data-lucide="Clock" class="w-5 h-5 mr-2 text-blue-500"></i>
-                Fase I: Propuesta y Negociación <span class="text-blue-500 ml-2">(Pipeline 🟦)</span>
+                <i data-lucide="clock" class="w-5 h-5 mr-2 text-blue-500"></i>
+                Fase I: Propuesta y Negociación
             </h2>
 
-            <!-- NUEVO: Botón para añadir nueva marca -->
             <button id="add-sponsorship-btn" class="mb-4 w-full flex items-center justify-center px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 shadow-md">
-                <i data-lucide="PlusCircle" class="w-5 h-5 mr-2"></i>
+                <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i>
                 Añadir Nueva Oportunidad
             </button>
 
-            <!-- NUEVO: Formulario de adición (inicialmente oculto) -->
             <div id="add-form-container" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg shadow-inner hidden">
                 <form id="add-sponsorship-form">
                     <input type="text" id="sponsorship-name" placeholder="Nombre de la Marca" required class="w-full p-2 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -96,7 +92,7 @@
                             Guardar Marca
                         </button>
                         <button type="button" id="cancel-add-btn" class="px-3 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition flex items-center">
-                            <i data-lucide="XCircle" class="w-4 h-4 mr-1"></i>
+                            <i data-lucide="x-circle" class="w-4 h-4 mr-1"></i>
                             Cancelar
                         </button>
                     </div>
@@ -108,22 +104,22 @@
             </div>
         </div>
 
-        <!-- Columna: 2. Pendiente por Pagar (Fase II: Acuerdos en Cierre) -->
+        <!-- Columna: Pendiente por Pagar -->
         <div id="pending" class="kanban-column rounded-xl p-4 flex flex-col h-full" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'pending')" ondragleave="handleDragLeave(event)">
             <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2 flex items-center">
-                <i data-lucide="DollarSign" class="w-5 h-5 mr-2 text-yellow-500"></i>
-                Fase II: Acuerdos en Cierre <span class="text-yellow-500 ml-2">(Confirmado 🟡)</span>
+                <i data-lucide="dollar-sign" class="w-5 h-5 mr-2 text-yellow-500"></i>
+                Fase II: Acuerdos en Cierre
             </h2>
             <div id="pending-list" class="space-y-4 flex-grow">
                 <!-- Las tarjetas pendientes se cargarán aquí -->
             </div>
         </div>
 
-        <!-- Columna: 3. Pagado (Fase III: Éxito y Cierre de Capital) -->
+        <!-- Columna: Pagado -->
         <div id="paid" class="kanban-column rounded-xl p-4 flex flex-col h-full" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'paid')" ondragleave="handleDragLeave(event)">
             <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2 flex items-center">
-                <i data-lucide="CheckCircle" class="w-5 h-5 mr-2 text-green-500"></i>
-                Fase III: Éxito y Cierre de Capital <span class="text-green-500 ml-2">(Capitalizado ✅)</span>
+                <i data-lucide="check-circle" class="w-5 h-5 mr-2 text-green-500"></i>
+                Fase III: Éxito y Cierre de Capital
             </h2>
             <div id="paid-list" class="space-y-4 flex-grow">
                 <!-- Las tarjetas pagadas se cargarán aquí -->
@@ -132,7 +128,7 @@
 
     </main>
 
-    <!-- Modal de confirmación (usado en lugar de alert/confirm) -->
+    <!-- Modal de confirmación -->
     <div id="action-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-sm">
             <h3 id="modal-title" class="text-lg font-bold mb-4 text-gray-800">Confirmar Acción</h3>
@@ -144,57 +140,35 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- Script de Firebase y Lógica del Simulador -->
-    <script type="module">
-        // Importaciones de Firebase (requeridas)
-        // Se añade 'setLogLevel' para el diagnóstico de errores de permisos de Firestore
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDocs, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
-        // --- INICIO: CORRECCIÓN ROBUSTA DE CONFIGURACIÓN Y AUTENTICACIÓN ---
+    <script>
+        // Inicializar iconos Lucide
+        lucide.createIcons();
 
-        // Configuración de respaldo (FALLBACK)
-        const FALLBACK_FIREBASE_CONFIG = {
-            apiKey: "", 
-            authDomain: "fallback-project.firebaseapp.com",
-            projectId: "fallback-project",
-            storageBucket: "fallback-project.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:a1b2c3d4e5f6g7h8i9j0"
+        // Configuración de Firebase - REEMPLAZA CON TUS DATOS
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROYECTO_ID",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
         };
-        
-        // Variables Globales (proporcionadas por el entorno o con respaldo)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        let firebaseConfig = FALLBACK_FIREBASE_CONFIG;
-        
-        // 1. Intentar analizar la configuración real
-        if (typeof __firebase_config !== 'undefined') {
-            try {
-                firebaseConfig = JSON.parse(__firebase_config);
-                
-                // 2. Si la clave de API está vacía o es una cadena no válida (como 'NOT_VALID'), se elimina 
-                // para que FirebaseAuth no falle al usar el Custom Token.
-                const apiKey = firebaseConfig.apiKey || '';
-                if (apiKey === "" || apiKey.includes("NOT_VALID")) {
-                    console.warn("[FIX] API Key is missing or invalid in config. Removing key to allow Custom Token Auth.");
-                    delete firebaseConfig.apiKey;
-                }
-            } catch (e) {
-                console.error("Error parsing __firebase_config, using fallback.", e);
-            }
-        }
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-        // --- FIN: CORRECCIÓN ROBUSTA DE CONFIGURACIÓN Y AUTENTICACIÓN ---
+        // Variables globales
+        let userId = null;
+        let unsubscribeSnapshot = null;
 
-
-        let app, db, auth, userId = null;
-        let isAuthReady = false;
-
-        // Datos iniciales de Jorge Dos Santos
+        // Datos iniciales de ejemplo
         const initialSponsorships = [
             { name: 'Moss', amount: 2000, status: 'pending', notes: 'Pendiente de pago por transferencia.' },
             { name: 'Puma', amount: 900, status: 'pending', notes: 'Esperando referencia de pago.' },
@@ -203,160 +177,109 @@
             { name: 'Mi casino', amount: 450, status: 'pending', notes: 'Verificar documentación.' },
             { name: 'Solverapp', amount: 550, status: 'paid', notes: 'Pagado en cash. Cerrado.' },
         ];
-        
-        // --- 1. Funciones de Utilidad y Firebase ---
 
-        const getSponsorshipPath = () => {
-            // Ruta: /artifacts/{appId}/public/data/sponsorship_kanban_jds
-            return `artifacts/${appId}/public/data/sponsorship_kanban_jds`;
-        };
-        
-        // Función para actualizar el display de usuario con el estado de conexión
-        const updateUserDisplay = (status, uid = '') => {
+        // Función para actualizar el estado de conexión
+        function updateUserDisplay(status, uid = '') {
             const displayElement = document.getElementById('user-display');
-            // Limpia las clases de estado anteriores
             displayElement.classList.remove('bg-indigo-100', 'text-indigo-700', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
             
             if (status === 'connecting') {
                 displayElement.textContent = 'Conectando...';
                 displayElement.classList.add('bg-indigo-100', 'text-indigo-700');
             } else if (status === 'connected') {
-                displayElement.textContent = `Usuario (UID): ${uid}`;
+                displayElement.textContent = `Conectado: ${uid.substring(0, 8)}...`;
                 displayElement.classList.add('bg-green-100', 'text-green-700');
             } else if (status === 'error') {
-                displayElement.textContent = 'Error de Auth. Revisa la consola.';
+                displayElement.textContent = 'Error de Conexión';
                 displayElement.classList.add('bg-red-100', 'text-red-700');
             }
-        };
+        }
 
-        const initFirebase = async () => {
-            
-            updateUserDisplay('connecting'); // Establece el estado inicial
+        // Inicializar Firebase y autenticación
+        async function initFirebase() {
+            updateUserDisplay('connecting');
             
             try {
-                // Configuración de log de debug para la depuración de permisos
-                if (typeof setLogLevel === 'function') {
-                    setLogLevel('debug');
-                    console.log("[DEBUG] Nivel de log de Firestore establecido a 'debug'. Revisa la consola para logs detallados de permisos.");
-                }
-
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // 1. Intentar inicio de sesión inicial (con token o anónimo)
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken).catch(e => {
-                        console.error("Custom token sign-in failed, proceeding to anonymous sign-in.", e);
-                        // Si el token falla, intentar anónimo
-                        return signInAnonymously(auth);
-                    });
-                } else {
-                    // Si no hay token personalizado, iniciar sesión anónimamente
-                    await signInAnonymously(auth);
-                }
+                // Autenticación anónima
+                await auth.signInAnonymously();
                 
-                // 2. Esperar a que el estado de autenticación esté completamente resuelto
-                await new Promise((resolve) => {
-                    const unsubscribe = onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            console.log("Authentication successful. User ID:", userId);
-                        } else {
-                            // En caso de fallo total o anónimo, usar un ID
-                            userId = auth.currentUser?.uid || crypto.randomUUID(); // Aseguramos el UID si está disponible
-                            console.log("Authentication resolved. User ID:", userId);
-                        }
-                        isAuthReady = true;
-                        updateUserDisplay('connected', userId); // Actualiza con éxito y UID
-                        unsubscribe(); // Dejar de escuchar una vez resuelto
-                        resolve();
-                    });
+                // Esperar a que la autenticación se complete
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Usuario autenticado:", userId);
+                        updateUserDisplay('connected', userId);
+                        
+                        // Inicializar datos y listeners
+                        initializeDataIfEmpty();
+                        startDataListener();
+                        setupFormListeners();
+                    } else {
+                        console.log("No hay usuario autenticado");
+                        updateUserDisplay('error');
+                    }
                 });
                 
-                // 3. Proceder con las operaciones de la base de datos SÓLO después de que la autenticación esté lista
-                await initializeDataIfEmpty();
-                startDataListener();
-
-                // Inicializar event listeners del formulario
-                setupFormListeners();
-
             } catch (error) {
-                // Mostrar un error de autenticación si algo falla después de la inicialización
-                console.error("Error initializing Firebase or during sign-in:", error);
-                updateUserDisplay('error'); // Actualiza con error
+                console.error("Error inicializando Firebase:", error);
+                updateUserDisplay('error');
             }
-        };
+        }
 
-        const initializeDataIfEmpty = async () => {
-            if (!isAuthReady || !db) return; // Se asegura de que Auth esté listo
-
-            // Se usa la ruta pública
-            const dataRef = collection(db, getSponsorshipPath());
-            
+        // Inicializar datos si la colección está vacía
+        async function initializeDataIfEmpty() {
             try {
-                const q = query(dataRef);
-                const snapshot = await getDocs(q); 
-
+                const snapshot = await db.collection('sponsorships').get();
+                
                 if (snapshot.empty) {
-                    console.log("No data found. Initializing with default sponsorships.");
-                    // Usar Promise.all para guardar todas las marcas
-                    await Promise.all(initialSponsorships.map(async (item) => {
-                        // Usamos addDoc para que Firebase genere el ID automáticamente
-                        await addDoc(collection(db, getSponsorshipPath()), item);
-                    }));
+                    console.log("Inicializando con datos de ejemplo");
+                    
+                    // Agregar cada patrocinio inicial
+                    for (const sponsorship of initialSponsorships) {
+                        await db.collection('sponsorships').add(sponsorship);
+                    }
                 }
             } catch (error) {
-                // Capturar errores de permisos aquí para la inicialización
-                console.error("Error during initial data check/creation (likely permissions issue):", error);
+                console.error("Error inicializando datos:", error);
             }
-        };
+        }
 
-        const updateSponsorshipStatus = async (id, newStatus) => {
-            if (!db || !isAuthReady) {
-                console.error("Database or Auth not ready.");
-                return;
-            }
+        // Actualizar estado de un patrocinio
+        async function updateSponsorshipStatus(id, newStatus) {
             try {
-                // Se usa la ruta pública
-                const docRef = doc(db, getSponsorshipPath(), id);
-                await setDoc(docRef, { status: newStatus }, { merge: true });
-                console.log(`Sponsorship ${id} updated to ${newStatus}`);
+                await db.collection('sponsorships').doc(id).update({
+                    status: newStatus
+                });
+                console.log(`Patrocinio ${id} actualizado a ${newStatus}`);
             } catch (error) {
-                console.error("Error updating document: ", error);
+                console.error("Error actualizando documento:", error);
+                showModal('Error', 'No se pudo actualizar el estado. Verifica la conexión.', () => {});
             }
-        };
+        }
 
-        // Función para agregar una nueva marca
-        const addSponsorship = async (name, amount, notes) => {
-            if (!db || !isAuthReady) {
-                console.error("Database or Auth not ready.");
-                return false;
-            }
+        // Agregar nuevo patrocinio
+        async function addSponsorship(name, amount, notes) {
             try {
                 const newSponsorship = {
                     name: name,
-                    amount: parseFloat(amount) || 0, // Asegurar que es un número
+                    amount: parseFloat(amount) || 0,
                     notes: notes || '',
-                    status: 'negotiation' // Inicia siempre en la primera fase
+                    status: 'negotiation',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 
-                // Se usa la ruta pública
-                await addDoc(collection(db, getSponsorshipPath()), newSponsorship);
-                console.log(`New sponsorship ${name} added.`);
+                await db.collection('sponsorships').add(newSponsorship);
+                console.log(`Nuevo patrocinio ${name} agregado`);
                 return true;
             } catch (error) {
-                console.error("Error adding new sponsorship: ", error);
+                console.error("Error agregando patrocinio:", error);
                 return false;
             }
-        };
-        
-        // --- 2. Funciones de Interfaz y Renderizado ---
+        }
 
-        const createCardElement = (sponsorship) => {
-            // Se usa doc.id como el id de la tarjeta
-            const cardId = sponsorship.id; 
-
+        // Crear elemento de tarjeta
+        function createCardElement(sponsorship) {
+            const cardId = sponsorship.id;
             const card = document.createElement('div');
             card.id = `card-${cardId}`;
             card.className = 'card bg-white p-4 rounded-lg shadow-md border-t-4 mb-4';
@@ -367,31 +290,32 @@
             let borderColor = '';
             let iconColor = '';
             let iconType = '';
-            let statusText = ''; 
+            let statusText = '';
 
             switch (sponsorship.status) {
                 case 'pending':
                     borderColor = 'border-yellow-500';
                     iconColor = 'text-yellow-500';
-                    iconType = 'DollarSign';
+                    iconType = 'dollar-sign';
                     statusText = 'PENDIENTE DE CAPITAL';
                     break;
                 case 'paid':
                     borderColor = 'border-green-500';
                     iconColor = 'text-green-500';
-                    iconType = 'CheckCircle';
+                    iconType = 'check-circle';
                     statusText = 'CAPITAL RECIBIDO';
                     break;
                 case 'negotiation':
                     borderColor = 'border-blue-500';
                     iconColor = 'text-blue-500';
-                    iconType = 'Clock';
+                    iconType = 'clock';
                     statusText = 'EN NEGOCIACIÓN';
                     break;
             }
 
-            // Usar un formato simple de moneda
-            const formattedAmount = sponsorship.amount ? `$${sponsorship.amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}` : 'Monto No Especificado';
+            const formattedAmount = sponsorship.amount ? 
+                `$${sponsorship.amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}` : 
+                'Monto No Especificado';
 
             card.innerHTML = `
                 <div class="flex items-center justify-between mb-2">
@@ -406,18 +330,21 @@
             `;
             card.classList.add(borderColor);
 
-            // Usamos la función global para renderizar iconos.
-            if (window.lucideCreateIcons) {
-                window.lucideCreateIcons({ element: card });
-            }
+            // Renderizar iconos dentro de la tarjeta
+            lucide.createIcons({
+                icons: [iconType],
+                attrs: {
+                    class: 'lucide-icon'
+                }
+            });
             
             card.addEventListener('dragstart', handleDragStart);
-
             return card;
-        };
+        }
 
-        const renderSponsorships = (sponsorships) => {
-            // Limpiar las columnas antes de renderizar
+        // Renderizar todos los patrocinios
+        function renderSponsorships(sponsorships) {
+            // Limpiar columnas
             document.getElementById('negotiation-list').innerHTML = '';
             document.getElementById('pending-list').innerHTML = '';
             document.getElementById('paid-list').innerHTML = '';
@@ -425,24 +352,23 @@
             let totalAmount = 0;
 
             sponsorships.forEach(sponsorship => {
-                totalAmount += sponsorship.amount || 0; // Sumar el monto
+                totalAmount += sponsorship.amount || 0;
                 const cardElement = createCardElement(sponsorship);
                 const listId = `${sponsorship.status}-list`;
                 const listContainer = document.getElementById(listId);
                 
                 if (listContainer) {
                     listContainer.appendChild(cardElement);
-                } else {
-                    console.warn(`Container for status '${sponsorship.status}' not found.`);
                 }
             });
 
-            // Actualizar el monto total
-            document.getElementById('total-amount').textContent = `$${totalAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-        };
+            // Actualizar monto total
+            document.getElementById('total-amount').textContent = 
+                `$${totalAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+        }
 
-        // Funciones para manejar el formulario de adición
-        const setupFormListeners = () => {
+        // Configurar listeners del formulario
+        function setupFormListeners() {
             const addBtn = document.getElementById('add-sponsorship-btn');
             const cancelBtn = document.getElementById('cancel-add-btn');
             const formContainer = document.getElementById('add-form-container');
@@ -456,7 +382,7 @@
             cancelBtn.addEventListener('click', () => {
                 formContainer.classList.add('hidden');
                 addBtn.classList.remove('hidden');
-                form.reset(); // Limpia el formulario
+                form.reset();
             });
 
             form.addEventListener('submit', async (e) => {
@@ -471,68 +397,53 @@
                         form.reset();
                         formContainer.classList.add('hidden');
                         addBtn.classList.remove('hidden');
-                        // La actualización de la lista es manejada por onSnapshot
                     } else {
-                        // Mostrar un mensaje de error si falla la adición
-                        showModal('Error al Guardar', 'No se pudo guardar la nueva marca en la base de datos. Revisa los permisos de Firestore.', () => {});
+                        showModal('Error', 'No se pudo guardar el patrocinio.', () => {});
                     }
+                } else {
+                    showModal('Datos Incompletos', 'Completa al menos el nombre y el monto.', () => {});
                 }
             });
-            
-            // Renderizar iconos dentro del formulario.
-            if (window.lucideCreateIcons) {
-                window.lucideCreateIcons({ element: formContainer });
-            }
-        };
-        
-        // --- 3. Listener de Firestore ---
+        }
 
-        const startDataListener = () => {
-            if (!db || !isAuthReady) {
-                console.error("Cannot start listener, DB or Auth not available.");
-                return;
+        // Iniciar listener de datos en tiempo real
+        function startDataListener() {
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
             }
 
-            // Se usa la ruta pública
-            const q = collection(db, getSponsorshipPath());
+            unsubscribeSnapshot = db.collection('sponsorships')
+                .onSnapshot((snapshot) => {
+                    const sponsorships = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        sponsorships.push({
+                            ...data,
+                            id: doc.id
+                        });
+                    });
 
-            // Escuchar cambios en tiempo real
-            onSnapshot(q, (snapshot) => {
-                const sponsorships = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data && data.name && data.status) {
-                        // Importante: Usar el ID del documento de Firebase
-                        sponsorships.push({ ...data, id: doc.id });
-                    }
+                    // Ordenar por monto (descendente)
+                    sponsorships.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+                    renderSponsorships(sponsorships);
+                }, (error) => {
+                    console.error("Error en listener:", error);
                 });
+        }
 
-                // Ordenar para mejor visualización (por monto, descendente)
-                sponsorships.sort((a, b) => (b.amount || 0) - (a.amount || 0));
-
-                renderSponsorships(sponsorships);
-            }, (error) => {
-                // Este error captura el problema de permisos
-                console.error("Error fetching real-time data: ", error);
-            });
-        };
-
-        // --- 4. Lógica de Drag and Drop y Confirmación (Interfaz Pública) ---
-
+        // Funciones de Drag and Drop
         let draggedId = null;
 
         function handleDragStart(event) {
             draggedId = event.target.getAttribute('data-id');
             event.dataTransfer.setData('text/plain', draggedId);
             event.dataTransfer.effectAllowed = 'move';
-            // Opcional: añadir una clase para feedback visual mientras se arrastra
             event.target.classList.add('opacity-50');
         }
 
         function handleDragOver(event) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
-            // Agregar clase de feedback visual a la columna
             event.currentTarget.classList.add('drag-over');
         }
 
@@ -543,6 +454,41 @@
         window.handleDragOver = handleDragOver;
         window.handleDragLeave = handleDragLeave;
 
+        function handleDrop(event, newStatus) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            const cardId = event.dataTransfer.getData('text/plain');
+            const cardElement = document.getElementById(`card-${cardId}`);
+            if (!cardElement) return;
+
+            cardElement.classList.remove('opacity-50');
+            const currentStatus = cardElement.getAttribute('data-status');
+
+            if (currentStatus === newStatus) return;
+
+            let title = '';
+            let message = '';
+
+            if (newStatus === 'paid') {
+                title = '¡Capitalizado!';
+                message = `¿Confirmas que <strong>${cardElement.querySelector('h3').textContent}</strong> ha sido movido a <strong>Cierre de Capital</strong>?`;
+            } else if (newStatus === 'pending') {
+                title = 'Acuerdo Confirmado';
+                message = `¿Mover <strong>${cardElement.querySelector('h3').textContent}</strong> a <strong>Acuerdos en Cierre</strong>?`;
+            } else if (newStatus === 'negotiation') {
+                title = 'Regresar a Propuesta';
+                message = `¿Mover <strong>${cardElement.querySelector('h3').textContent}</strong> a <strong>Propuesta y Negociación</strong>?`;
+            }
+
+            showModal(title, message, () => {
+                updateSponsorshipStatus(cardId, newStatus);
+            });
+        }
+
+        window.handleDrop = handleDrop;
+
+        // Mostrar modal
         function showModal(title, message, onConfirm) {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-message').innerHTML = message;
@@ -552,69 +498,22 @@
             const confirmBtn = document.getElementById('modal-confirm');
             const cancelBtn = document.getElementById('modal-cancel');
 
-            // Limpiar listeners anteriores
-            confirmBtn.onclick = null;
-            cancelBtn.onclick = null;
-
-            // Configurar el botón de confirmar
             confirmBtn.onclick = () => {
                 document.getElementById('action-modal').classList.add('hidden');
                 document.getElementById('action-modal').classList.remove('flex');
                 onConfirm();
             };
 
-            // Configurar el botón de cancelar
             cancelBtn.onclick = () => {
                 document.getElementById('action-modal').classList.add('hidden');
                 document.getElementById('action-modal').classList.remove('flex');
-                // Quitar la opacidad si el arrastre se cancela
                 const card = document.getElementById(`card-${draggedId}`);
                 if (card) card.classList.remove('opacity-50');
             };
         }
 
-        function handleDrop(event, newStatus) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('drag-over');
-            
-            const cardId = event.dataTransfer.getData('text/plain');
-            const cardElement = document.getElementById(`card-${cardId}`);
-            if (!cardElement) return;
-
-            cardElement.classList.remove('opacity-50'); // Quitar el feedback de arrastre
-
-            const currentStatus = cardElement.getAttribute('data-status');
-
-            if (currentStatus === newStatus) {
-                console.log("Status unchanged.");
-                return;
-            }
-
-            let title = '';
-            let message = '';
-
-            if (newStatus === 'paid') {
-                title = '¡Capitalizado!';
-                message = `¿Deseas confirmar que la marca **${cardElement.querySelector('h3').textContent}** ha sido movida a **Fase III: Cierre de Capital**?`;
-            } else if (newStatus === 'pending') {
-                title = 'Acuerdo Confirmado';
-                message = `¿Deseas mover la marca **${cardElement.querySelector('h3').textContent}** a **Fase II: Acuerdos en Cierre**?`;
-            } else if (newStatus === 'negotiation') {
-                title = 'Regresar a Propuesta';
-                message = `¿Deseas mover la marca **${cardElement.querySelector('h3').textContent}** a **Fase I: Propuesta y Negociación**?`;
-            }
-
-            showModal(title, message, () => {
-                // Función de confirmación: actualizar en Firebase
-                updateSponsorshipStatus(cardId, newStatus);
-            });
-        }
-
-        window.handleDrop = handleDrop;
-
-
-        // Inicializar la aplicación al cargar la ventana
-        window.onload = initFirebase;
+        // Inicializar la aplicación cuando se carga la página
+        window.addEventListener('DOMContentLoaded', initFirebase);
     </script>
 </body>
 </html>
